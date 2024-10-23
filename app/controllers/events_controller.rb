@@ -5,6 +5,7 @@
 # @date 2024-10-22
 # @authors
 #  - Athika Jishida
+require 'net/http'
 
 class EventsController < ApplicationController
 
@@ -19,17 +20,23 @@ class EventsController < ApplicationController
   #              participant emails if they are provided in the request parameters.
   # @route POST /events
   def create
+    # binding.pry
     @event = current_user.events.build(event_params)
 
     ActiveRecord::Base.transaction do
+      # Generate a Google Meet link if the event type is "Google Meet"
+      if params[:event_type] == 'Google Meet'
+        @event.link = generate_google_meet_link
+      end
+
       if @event.save
         # Handle participant emails if provided
         if params[:emails].present?
           params[:emails].each do |email|
             @event.event_participants.create!(email: email)
+            send_event_email(email, @event)
           end
         end
-
         render json: @event, status: :created
       else
         render json: { errors: @event.errors.full_messages }, status: :unprocessable_entity
@@ -39,7 +46,17 @@ class EventsController < ApplicationController
     render json: { errors: e.message }, status: :unprocessable_entity
   end
 
+
   private
+  # actual Google API integration)
+  def generate_google_meet_link
+    "https://meet.google.com/new"
+  end
+
+  # Sends an email with event details
+  def send_event_email(email, event)
+    EventMailer.with(email: email, event: event).event_invitation.deliver_now
+  end
 
   # @description Strong parameter method to sanitize input and convert necessary fields. 
   #              Handles conversion of date and time fields and renames `type` to `event_type`.
@@ -71,13 +88,15 @@ class EventsController < ApplicationController
       :title,
       :description,
       :event_type,
-      :location,
+      :platform,
+       :customLink,
       :start_date,
       :end_date,
       :start_time,
       :end_time,
       :buffer_time,
       :color,
+      :link,
       days_available: {}
     )
   end

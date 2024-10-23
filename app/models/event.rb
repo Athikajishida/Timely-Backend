@@ -6,7 +6,7 @@ class Event < ApplicationRecord
 
   validates :title, presence: true
   validates :event_type, presence: true
-  validates :location, presence: true
+  # validates :location, presence: true
   validates :start_date, presence: true
   validates :end_date, presence: true
   validates :start_time, presence: true
@@ -17,6 +17,7 @@ class Event < ApplicationRecord
   # Optional but recommended validations
   validate :end_date_after_start_date
   validate :end_time_after_start_time
+  enum platform: {  google_meet: "1", zoom: "2", others: "3" }
 
   private
 

@@ -1,0 +1,15 @@
+<p>Hello,</p>
+
+<p>You have been invited to the following event:</p>
+
+<p>
+  <strong>Event:</strong> <%= @event.title %><br>
+  <strong>Location:</strong> <%= @event.location %><br>
+  <strong>Start Time:</strong> <%= @event.start_time %><br>
+  <strong>End Time:</strong> <%= @event.end_time %><br>
+  <% if @event.link.present? %>
+    <strong>Join Link:</strong> <%= @event.link %><br>
+  <% end %>
+</p>
+
+<p>We look forward to your participation!</p>
