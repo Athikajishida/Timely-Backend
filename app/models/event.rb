@@ -17,7 +17,9 @@ class Event < ApplicationRecord
   # Optional but recommended validations
   validate :end_date_after_start_date
   validate :end_time_after_start_time
-  enum platform: {  google_meet: "1", zoom: "2", others: "3" }
+
+  enum platform: {  google_meet: '1', zoom: '2', others: '3' }
+  validates :customlink, presence: true, if: -> { platform == 'others' }
 
   private
 

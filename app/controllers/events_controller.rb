@@ -22,11 +22,14 @@ class EventsController < ApplicationController
   def create
     # binding.pry
     @event = current_user.events.build(event_params)
+    Rails.logger.info("Emails: #{params[:emails]}")
 
     ActiveRecord::Base.transaction do
       # Generate a Google Meet link if the event type is "Google Meet"
       if params[:event_type] == 'Google Meet'
         @event.link = generate_google_meet_link
+      elsif params[:event_type] == 'Others'
+        @event.link = params[:customlink] 
       end
 
       if @event.save
@@ -35,6 +38,8 @@ class EventsController < ApplicationController
           params[:emails].each do |email|
             @event.event_participants.create!(email: email)
             send_event_email(email, @event)
+            Rails.logger.info("Sending email to: #{email}")
+
           end
         end
         render json: @event, status: :created
@@ -72,6 +77,11 @@ class EventsController < ApplicationController
       params[:event][:end_time] = params[:timeRange][:endTime]
     end
 
+
+    # Map platform and customLink from frontend to backend
+    params[:event][:platform] = params[:platform] if params[:platform].present?
+    params[:event][:customlink] = params[:customLink] if params[:customLink].present?
+
     # Convert bufferTime to an integer
     params[:event][:buffer_time] = params[:bufferTime].to_i if params[:bufferTime].present?
 
@@ -88,8 +98,8 @@ class EventsController < ApplicationController
       :title,
       :description,
       :event_type,
-      :platform,
-       :customLink,
+      :platform, 
+      :customlink,  
       :start_date,
       :end_date,
       :start_time,
