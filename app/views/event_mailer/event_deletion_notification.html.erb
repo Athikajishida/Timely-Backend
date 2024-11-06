@@ -1,0 +1,13 @@
+<!-- app/views/event_mailer/event_deletion_notification.html.erb -->
+<h1>Event Cancellation Notice</h1>
+
+<p>Dear Participant,</p>
+
+<p>We regret to inform you that the event titled "<strong><%= @event.title %></strong>" scheduled for 
+   <strong><%= @event.start_date.strftime('%B %d, %Y') %></strong> at 
+   <strong><%= @event.start_time.strftime('%I:%M %p') %></strong> has been deleted by the organizer.</p>
+
+<p>We apologize for any inconvenience this may have caused. If you have any questions, feel free to reach out to us.</p>
+
+<p>Thank you,</p>
+<p>The Timely Team</p>

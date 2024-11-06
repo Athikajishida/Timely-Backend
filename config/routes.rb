@@ -8,5 +8,5 @@ Rails.application.routes.draw do
   post '/confirm_email', to: 'registrations#confirm_email' # For OTP confirmation
   post '/confirm_otp', to: 'otp_confirmations#confirm'
   
-  resources :events, only: [:index, :create, :show] 
+  resources :events, only: [:index, :create, :show, :update, :destroy]
 end

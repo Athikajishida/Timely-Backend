@@ -8,7 +8,7 @@
 require 'net/http'
 
 class EventsController < ApplicationController
-
+  before_action :set_event, only: [:update, :destroy]
   # @description Retrieves all events from the database and renders them as JSON.
   # @route GET /events
   def index
@@ -47,12 +47,41 @@ class EventsController < ApplicationController
         render json: { errors: @event.errors.full_messages }, status: :unprocessable_entity
       end
     end
-  rescue ActiveRecord::RecordInvalid => e
-    render json: { errors: e.message }, status: :unprocessable_entity
+      rescue ActiveRecord::RecordInvalid => e
+        render json: { errors: e.message }, status: :unprocessable_entity
+  end
+
+  # PUT /events/:id
+  def update
+    if @event.update(event_params)
+      render json: @event, status: :ok
+    else
+      render json: { errors: @event.errors.full_messages }, status: :unprocessable_entity
+    end
+  end
+
+  # DELETE /events/:id
+  def destroy
+    participant_emails = @event.event_participants.pluck(:email) # Retrieve participant emails
+
+    if @event.destroy
+      # Send email notification to each participant
+      participant_emails.each do |email|
+        EventMailer.event_deletion_notification(email, @event).deliver_now
+      end
+      head :no_content
+    else
+      render json: { errors: @event.errors.full_messages }, status: :unprocessable_entity
+    end
+  end
+
+  private
+
+  def set_event
+    @event = Event.find_by(id: params[:id])
   end
 
 
-  private
   # actual Google API integration)
   def generate_google_meet_link
     "https://meet.google.com/new"

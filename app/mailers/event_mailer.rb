@@ -8,4 +8,10 @@ class EventMailer < ApplicationMailer
       subject: "You're invited to an event: #{@event.title}"
     )
   end
+
+  def event_deletion_notification(email, event)
+    @event = event
+    mail(to: email, subject: 'Event Deleted Notification')
+  end
+
 end
