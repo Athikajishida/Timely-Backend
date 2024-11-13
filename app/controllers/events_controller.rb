@@ -8,6 +8,8 @@
 require 'net/http'
 
 class EventsController < ApplicationController
+  before_action :authenticate_user!, except: :show_by_token
+
   before_action :set_event, only: [:update, :destroy]
   # @description Retrieves all events from the database and renders them as JSON.
   # @route GET /events
@@ -20,11 +22,15 @@ class EventsController < ApplicationController
   #              participant emails if they are provided in the request parameters.
   # @route POST /events
   def create
-    # binding.pry
     @event = current_user.events.build(event_params)
     Rails.logger.info("Emails: #{params[:emails]}")
 
     ActiveRecord::Base.transaction do
+
+      # Generate a unique scheduling link
+      @event.scheduling_link = generate_scheduling_link
+
+
       # Generate a Google Meet link if the event type is "Google Meet"
       if params[:event_type] == 'Google Meet'
         @event.link = generate_google_meet_link
@@ -50,7 +56,16 @@ class EventsController < ApplicationController
       rescue ActiveRecord::RecordInvalid => e
         render json: { errors: e.message }, status: :unprocessable_entity
   end
+  def show_by_token
+    @event = Event.find_by(scheduling_link: params[:token])
+    Rails.logger.info "Token received: #{params[:token]}"  # Add this line for debugging
 
+    if @event
+      render json: @event
+    else
+      render json: { error: 'Event not found' }, status: :not_found
+    end
+  end
   # PUT /events/:id
   def update
     if @event.update(event_params)
@@ -86,7 +101,11 @@ class EventsController < ApplicationController
   def generate_google_meet_link
     "https://meet.google.com/new"
   end
+  def generate_scheduling_link
+    # Generate a unique token for the scheduling link
+    token = SecureRandom.urlsafe_base64(8)
 
+  end
   # Sends an email with event details
   def send_event_email(email, event)
     EventMailer.with(email: email, event: event).event_invitation.deliver_now

@@ -4,10 +4,10 @@ class Booking < ApplicationRecord
 
   validates :scheduled_time, presence: true
   validate :validate_booking_time
-
   def validate_booking_time
-    if event.bookings.count >= event.quota
+    if event.quota && event.bookings.count >= event.quota
       errors.add(:base, "Quota for this event has been reached")
     end
   end
+  
 end

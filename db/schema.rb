@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_10_23_171804) do
+ActiveRecord::Schema[7.1].define(version: 2024_11_12_163307) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -20,6 +20,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_10_23_171804) do
     t.datetime "scheduled_time"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "status", default: "pending"
     t.index ["event_id"], name: "index_bookings_on_event_id"
     t.index ["user_id"], name: "index_bookings_on_user_id"
   end
@@ -55,6 +56,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_10_23_171804) do
     t.string "link"
     t.integer "platform", default: 0, null: false
     t.string "customlink"
+    t.string "scheduling_link"
     t.index ["user_id"], name: "index_events_on_user_id"
   end
 
