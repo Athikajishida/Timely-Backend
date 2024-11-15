@@ -10,5 +10,5 @@ Rails.application.routes.draw do
   get '/schedule/:token', to: 'events#show_by_token'
  
   resources :events, only: [:index, :create, :show, :update, :destroy]
-  resources :bookings, only: [:create]
+  resources :bookings, only: [:index,:create]
 end

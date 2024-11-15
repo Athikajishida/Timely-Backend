@@ -10,7 +10,7 @@ class User < ApplicationRecord
   validates :email, presence: true, uniqueness: { case_sensitive: false }
   has_many :events
   before_create :generate_otp
-
+  has_many :bookings, dependent: :destroy
   # Generate OTP and store it in the database along with the sent timestamp
   def generate_otp
     self.confirmation_otp = rand(100_000..999_999).to_s
