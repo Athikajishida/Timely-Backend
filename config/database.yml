@@ -79,6 +79,6 @@ test:
 #
 production:
   <<: *default
-  database: timely_backend_production
+  database: timely_backend_development
   username: timely_backend
   password: <%= ENV["TIMELY_BACKEND_DATABASE_PASSWORD"] %>

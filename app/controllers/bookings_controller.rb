@@ -6,10 +6,10 @@
 # @authors
 #  - Athika Jishida
 
-class BookingsController < ApplicationController
+class BookingsController < ApplicationController # rubocop:disable Style/Documentation
   # Authenticate user before performing any actions in this controller
   before_action :authenticate_user!
-  
+
   # Set the event object before creating a booking
   before_action :set_event, only: :create
 
@@ -22,14 +22,15 @@ class BookingsController < ApplicationController
   # @params [String] scheduled_time Time scheduled for the booking
   # @return [JSON] JSON response with the booking details if successful, or error messages if unsuccessful.
   # @status 201 Created on success, 404 Not Found if the event doesn't exist, or 422 Unprocessable Entity on failure
-  def create
+  def create # rubocop:disable Metrics/MethodLength
     # Ensure event is found
     return render json: { error: 'Event not found' }, status: :not_found unless @event
 
     # Check for existing confirmed booking for this event
     existing_booking = @event.bookings.find_by(user: current_user, status: 'confirmed')
     if existing_booking
-      return render json: { message: 'You already have a confirmed booking for this event', booking: existing_booking }, status: :ok
+      return render json: { message: 'You already have a confirmed booking for this event', booking: existing_booking },
+                    status: :ok
     end
 
     # Create and confirm a new booking if no existing confirmed booking

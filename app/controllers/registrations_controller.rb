@@ -1,57 +1,100 @@
 # frozen_string_literal: true
 
-# @file RegistrationsController.rb
-# @description Controller for handling user registration and email confirmation in Timely.
-# @version 1.0.0.0
-# @author - Athika Jishida
-
 class RegistrationsController < ApplicationController
-  # Create action for registering a new user or resending OTP for unconfirmed users.
+  skip_before_action :authenticate_user!, only: [:create, :confirm_email]
+
   def create
     existing_user = User.find_by(email: user_params[:email])
 
     if existing_user
-      if existing_user.confirmed
-        render json: { error: 'Email already taken' }, status: :unprocessable_entity
-      else
-        # Resend OTP for unconfirmed user
-        existing_user.generate_otp
-        existing_user.save
-        send_otp_to_user(existing_user)
-        render json: { message: 'User already registered but not confirmed. New OTP sent.' }, status: :ok
-      end
+      handle_existing_user(existing_user)
     else
-      user = User.new(user_params)
-      if user.save
-        send_otp_to_user(user)
-        render json: { message: 'User registered. Please check your email for the OTP to confirm your account.' },
-               status: :created
-      else
-        render json: { errors: user.errors.full_messages }, status: :unprocessable_entity
-      end
+      create_new_user
     end
   end
 
-  # Action for confirming a user’s email via OTP.
   def confirm_email
     user = User.find_by(email: params[:email])
+
+    if !user
+      render json: { error: 'User not found' }, status: :not_found
+      return
+    end
+
+    if user.confirmed
+      render json: { error: 'Email already confirmed' }, status: :unprocessable_entity
+      return
+    end
+
     if user&.confirm_otp(params[:otp])
-      user.confirm! # Mark the user as confirmed
-      render json: { message: 'Account confirmed successfully.' }, status: :ok
+      user.confirm!
+      token = encode_token(user)
+
+      render json: {
+        message: 'Account confirmed successfully.',
+        token: token,
+        user: user.as_json(only: [:id, :name, :email])
+      }, status: :ok
     else
-      render json: { error: 'Invalid or expired OTP.' }, status: :unprocessable_entity
+      render json: { 
+        error: 'Invalid or expired OTP.',
+        message: 'Please check the OTP and try again. You can request a new OTP if needed.'
+      }, status: :unprocessable_entity
     end
   end
 
   private
 
-  # @description Strong parameters for user creation.
+  def handle_existing_user(user)
+    if user.confirmed
+      render json: { error: 'Email already taken' }, status: :unprocessable_entity
+    else
+      resend_otp(user)
+    end
+  end
+
+  def create_new_user
+    user = User.new(user_params)
+    if user.save
+      send_otp_to_user(user)
+      render json: {
+        message: 'User registered. Please check your email for the OTP to confirm your account.',
+        email: user.email
+      }, status: :created
+    else
+      render json: { errors: user.errors.full_messages }, status: :unprocessable_entity
+    end
+  end
+
+  def resend_otp(user)
+    user.generate_otp
+    if user.save
+      send_otp_to_user(user)
+      render json: { 
+        message: 'User already registered but not confirmed. New OTP sent.',
+        email: user.email
+      }, status: :ok
+    else
+      render json: { errors: user.errors.full_messages }, status: :unprocessable_entity
+    end
+  end
+
+  def encode_token(user)
+    payload = { 
+      user_id: user.id, 
+      email: user.email,
+      exp: 24.hours.from_now.to_i
+    }
+    JWT.encode(payload, Rails.application.secrets.secret_key_base)
+  end
+
   def user_params
     params.require(:user).permit(:name, :email, :password)
   end
 
-  # @description Sends OTP to the user's email using the mailer.
   def send_otp_to_user(user)
-    UserMailer.with(user:, otp: user.confirmation_otp).send_confirmation_email.deliver_now
+    UserMailer.with(user: user, otp: user.confirmation_otp)
+            .send_confirmation_email
+            .deliver_now
   end
 end

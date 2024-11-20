@@ -8,7 +8,7 @@ Rails.application.routes.draw do
   post '/confirm_email', to: 'registrations#confirm_email' # For OTP confirmation
   post '/confirm_otp', to: 'otp_confirmations#confirm'
   get '/schedule/:token', to: 'events#show_by_token'
- 
-  resources :events, only: [:index, :create, :show, :update, :destroy]
-  resources :bookings, only: [:index,:create]
+
+  resources :events, only: %i[index create show update destroy]
+  resources :bookings, only: %i[index create]
 end
