@@ -45,8 +45,7 @@ group :development, :test do
   gem 'jwt'
   gem 'omniauth-google-oauth2'
   gem 'rspec-rails'
-  gem 'rswag'
-  # gem 'rubocop', require: false
+   # gem 'rubocop', require: false
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem 'debug', platforms: %i[mri windows]
 end
